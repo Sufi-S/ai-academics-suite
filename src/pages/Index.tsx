@@ -25,11 +25,13 @@ const Index = () => {
 
   const handleLoginSuccess = (user: any) => {
     // Navigate based on user role or selected role
-    const userRole = user.role || selectedRole.toLowerCase();
+    const userRole = user.role;
     if (userRole === 'student') {
       navigate('/student-dashboard');
     } else if (userRole === 'teacher') {
       navigate('/teacher-dashboard');
+    } else if (userRole === 'moderator') {
+      navigate('/moderator-dashboard');
     }
   };
 
