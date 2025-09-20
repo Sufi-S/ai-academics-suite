@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/ui/stats-card";
+import { useToast } from "@/hooks/use-toast";
+import { apiService } from "@/lib/api";
 import { 
   Users, 
   BookOpen, 
@@ -22,6 +24,58 @@ import { useNavigate } from "react-router-dom";
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [students, setStudents] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersData, filesData] = await Promise.all([
+          apiService.getUsers(),
+          apiService.getFiles()
+        ]);
+        setStudents(usersData.filter((user: any) => user.role === 'student'));
+        setFiles(filesData);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data. Make sure your Flask backend is running on localhost:5000",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await apiService.uploadFile(formData);
+      toast({
+        title: "Success",
+        description: "File uploaded successfully",
+      });
+      // Refresh files
+      const filesData = await apiService.getFiles();
+      setFiles(filesData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload file",
+        variant: "destructive",
+      });
+    }
+  };
 
   const stats = [
     {
@@ -131,12 +185,24 @@ export default function TeacherDashboard() {
                     <Button 
                       key={action.title}
                       className={`h-24 flex-col space-y-2 ${action.bg} hover:opacity-90 text-white shadow-glow`}
+                      onClick={() => {
+                        if (action.title === "Upload Content") {
+                          document.getElementById('file-upload')?.click();
+                        }
+                      }}
                     >
                       <action.icon className="w-6 h-6" />
                       <span className="text-xs font-medium">{action.title}</span>
                     </Button>
                   ))}
                 </div>
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv"
+                />
               </CardContent>
             </Card>
 

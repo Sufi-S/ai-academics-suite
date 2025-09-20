@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/ui/stats-card";
+import { useToast } from "@/hooks/use-toast";
+import { apiService } from "@/lib/api";
 import { 
   Brain, 
   BookOpen, 
@@ -22,6 +24,33 @@ import { useNavigate } from "react-router-dom";
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [quizzes, setQuizzes] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [quizzesData, assignmentsData] = await Promise.all([
+          apiService.getQuizzes(),
+          apiService.getAssignments()
+        ]);
+        setQuizzes(quizzesData);
+        setAssignments(assignmentsData);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data. Make sure your Flask backend is running on localhost:5000",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const stats = [
     {

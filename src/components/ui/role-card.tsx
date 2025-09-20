@@ -7,11 +7,12 @@ interface RoleCardProps {
   description: string;
   icon: ReactNode;
   onClick: () => void;
-  gradient: string;
+  gradient?: string;
   className?: string;
+  features?: string[];
 }
 
-export function RoleCard({ title, description, icon, onClick, gradient, className }: RoleCardProps) {
+export function RoleCard({ title, description, icon, onClick, gradient = "bg-gradient-primary", className, features }: RoleCardProps) {
   return (
     <Card 
       className={cn(
@@ -37,6 +38,20 @@ export function RoleCard({ title, description, icon, onClick, gradient, classNam
             {description}
           </p>
         </div>
+        
+        {features && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground text-sm">Features:</h4>
+            <ul className="space-y-1">
+              {features.map((feature, index) => (
+                <li key={index} className="text-xs text-muted-foreground flex items-center">
+                  <div className="w-1 h-1 bg-primary rounded-full mr-2" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
